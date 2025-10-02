@@ -1,32 +1,41 @@
 import React, { useState } from "react";
+import { Platform } from "react-native";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
-
+import { useNavigation } from "@react-navigation/native";
 export default function LoginScreen() {
   const [correo, setCorreo] = useState("");
   const [password, setPassword] = useState("");
   const [mensaje, setMensaje] = useState("");
   const [mensajeExito, setMensajeExito] = useState(false); // true si login correcto
 
+  const [debug, setDebug] = useState("");
   const handleLogin = async () => {
+    let url = "http://10.0.2.2:3000/login";
+    if (Platform.OS === "web") {
+      url = "http://localhost:3000/login";
+    }
     try {
-      const response = await fetch("http://10.0.2.2:3000/login", { 
-        // ⚠️ Para Android Emulator usa 10.0.2.2
-        // En dispositivo físico, usa la IP local de tu PC, ej: http://192.168.1.100:3000/login
+      setDebug(`Enviando a: ${url}`);
+      const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ Correo: correo, Password: password }),
       });
 
-      console.log("Status del backend:", response.status);
+      setDebug(prev => prev + `\nStatus del backend: ${response.status}`);
 
       const data = await response.json();
-      console.log("Respuesta del backend:", data);
+      setDebug(prev => prev + `\nRespuesta del backend: ${JSON.stringify(data)}`);
 
-      setMensaje(data.message);
-      setMensajeExito(data.success);
-
+      if (data.success) {
+        setMensaje("Usuario correcto");
+        setMensajeExito(true);
+      } else {
+        setMensaje("Usuario no encontrado");
+        setMensajeExito(false);
+      }
     } catch (error) {
-      console.error("Error de conexión:", error);
+      setDebug(prev => prev + `\nError de conexión: ${error}`);
       setMensaje("Error de conexión al servidor");
       setMensajeExito(false);
     }
@@ -58,6 +67,9 @@ export default function LoginScreen() {
 
       {mensaje ? (
         <Text style={mensajeExito ? styles.success : styles.error}>{mensaje}</Text>
+      ) : null}
+      {debug ? (
+        <Text style={{ marginTop: 10, fontSize: 12, color: '#555' }}>{debug}</Text>
       ) : null}
     </View>
   );

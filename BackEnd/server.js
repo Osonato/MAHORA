@@ -17,8 +17,8 @@ const db = mysql.createConnection({
 
 db.connect((err) => {
   if (err) {
-    console.error("Error al conectar a la BD:", err);
-    return;
+    console.error("Error al conectar a la BD:", err.message);
+    process.exit(1);
   }
   console.log("Conectado a MySQL");
 });
@@ -49,5 +49,5 @@ app.post("/login", (req, res) => {
 // 🔹 Iniciar servidor
 const PORT = 3000;
 app.listen(PORT, () => {
-  console.log(` Servidor corriendo en http://localhost:${PORT}`);
+  console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
