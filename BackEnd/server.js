@@ -12,7 +12,7 @@ const db = mysql.createConnection({
   host: "localhost",
   user: "root",      // tu usuario
   password: "",      // tu contraseña
-  database: "gt", // tu base de datos
+  database: "gt",    // tu base de datos
 });
 
 db.connect((err) => {
@@ -39,10 +39,29 @@ app.post("/login", (req, res) => {
     }
 
     if (result.length > 0) {
-      res.json({ success: true, message: "Inicio de sesión correcto " });
+      res.json({ success: true, message: "Inicio de sesión correcto" });
     } else {
-      res.json({ success: false, message: "Credenciales incorrectas " });
+      res.json({ success: false, message: "Credenciales incorrectas" });
     }
+  });
+});
+
+// 🔹 Ruta para obtener tareas con nombres de usuarios
+app.get("/tareas", (req, res) => {
+  const sql = `
+    SELECT t.ID_tareas, t.Nombre, t.Descripcion, t.Fecha_inicio, t.Fecha_fin,
+           ua.Nombre AS Asignado, uc.Nombre AS Creador
+    FROM tareas t
+    LEFT JOIN usuarios ua ON t.ID_UserA = ua.ID_usuario
+    LEFT JOIN usuarios uc ON t.ID_UserC = uc.ID_usuario;
+  `;
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("Error al obtener tareas:", err);
+      return res.status(500).json({ success: false, message: "Error al obtener tareas" });
+    }
+    res.json(results);
   });
 });
 
