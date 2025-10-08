@@ -11,16 +11,21 @@ export default function TablesScreen() {
   }, []);
 
   const fetchTareas = async () => {
-    try {
-      const response = await fetch("http://10.0.2.2:3000/tareas"); // Cambia la IP si es necesario
-      const json = await response.json();
-      setTareas(json);
-      setLoading(false);
-    } catch (err) {
-      setError("Error al cargar los datos");
-      setLoading(false);
-    }
-  };
+  try {
+    console.log("Intentando conectar al backend...");
+    const response = await fetch("http://localhost:3000/tareas");
+    console.log("Status:", response.status);
+    const json = await response.json();
+    console.log("Datos recibidos:", json);
+    setTareas(json);
+    setLoading(false);
+  } catch (err) {
+    console.log("Error al conectar:", err);
+    setError("Error al cargar los datos");
+    setLoading(false);
+  }
+};
+
 
   const renderItem = ({ item }) => (
     <View style={styles.row}>

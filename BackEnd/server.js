@@ -39,8 +39,17 @@ app.post("/login", (req, res) => {
     }
 
     if (result.length > 0) {
-      res.json({ success: true, message: "Inicio de sesión correcto " });
-    } else {
+  const user = result[0];
+  res.json({
+    success: true,
+    message: "Inicio de sesión correcto",
+    user: {
+      id: user.ID_usuario,
+      nombre: user.Nombre,
+      rol: user.Rol
+    }
+  });
+} else {
       res.json({ success: false, message: "Credenciales incorrectas" });
     }
   });
