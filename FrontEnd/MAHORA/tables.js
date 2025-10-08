@@ -11,29 +11,57 @@ export default function TablesScreen() {
   }, []);
 
   const fetchTareas = async () => {
-  try {
-    console.log("Intentando conectar al backend...");
-    const response = await fetch("http://localhost:3000/tareas");
-    console.log("Status:", response.status);
-    const json = await response.json();
-    console.log("Datos recibidos:", json);
-    setTareas(json);
-    setLoading(false);
-  } catch (err) {
-    console.log("Error al conectar:", err);
-    setError("Error al cargar los datos");
-    setLoading(false);
-  }
-};
+    try {
+      const response = await fetch("http://localhost:3000/tareas");
+      const json = await response.json();
 
+      // Normalizamos los datos
+      const dataMapped = json.map((t) => ({
+        ID: t.ID_tareas || t.Identificacion || t.ID, 
+        Nombre: t.Nombre,
+        Descripcion: t.Descripcion,
+        Fecha_inicio: t.Fecha_inicio,
+        Fecha_fin: t.Fecha_fin,
+        Asignado: t.Asignado,
+        Creador: t.Creador,
+      }));
 
-  const renderItem = ({ item }) => (
-    <View style={styles.row}>
-      <Text style={[styles.cell, styles.id]}>{item.ID_tareas}</Text>
+      setTareas(dataMapped);
+      setLoading(false);
+    } catch (err) {
+      setError("Error al cargar los datos");
+      setLoading(false);
+    }
+  };
+
+  // Función para dar formato a fechas (DD/MM/YYYY)
+  const formatDate = (dateString) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString("es-MX", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+    } catch (e) {
+      return dateString;
+    }
+  };
+
+  const renderItem = ({ item, index }) => (
+    <View
+      style={[
+        styles.row,
+        { backgroundColor: index % 2 === 0 ? "#ffffff" : "#f3f7fa" },
+      ]}
+    >
+      <View style={styles.idBadge}>
+        <Text style={styles.idText}>{item.ID}</Text>
+      </View>
       <Text style={[styles.cell, styles.name]}>{item.Nombre}</Text>
       <Text style={[styles.cell, styles.desc]}>{item.Descripcion}</Text>
-      <Text style={[styles.cell, styles.date]}>{item.Fecha_inicio}</Text>
-      <Text style={[styles.cell, styles.date]}>{item.Fecha_fin}</Text>
+      <Text style={[styles.cell, styles.date]}>{formatDate(item.Fecha_inicio)}</Text>
+      <Text style={[styles.cell, styles.date]}>{formatDate(item.Fecha_fin)}</Text>
       <Text style={[styles.cell, styles.user]}>{item.Asignado}</Text>
       <Text style={[styles.cell, styles.user]}>{item.Creador}</Text>
     </View>
@@ -41,49 +69,117 @@ export default function TablesScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Tabla de Tareas</Text>
+      <Text style={styles.title}>📋 Tabla de Tareas</Text>
 
       {loading ? (
         <ActivityIndicator size="large" color="#007BFF" />
       ) : error ? (
         <Text style={styles.error}>{error}</Text>
       ) : (
-        <ScrollView horizontal>
-          <View>
-            {/* Header */}
-            <View style={styles.header}>
-              <Text style={[styles.cell, styles.id]}>ID</Text>
-              <Text style={[styles.cell, styles.name]}>Nombre</Text>
-              <Text style={[styles.cell, styles.desc]}>Descripción</Text>
-              <Text style={[styles.cell, styles.date]}>Fecha Inicio</Text>
-              <Text style={[styles.cell, styles.date]}>Fecha Fin</Text>
-              <Text style={[styles.cell, styles.user]}>Asignado</Text>
-              <Text style={[styles.cell, styles.user]}>Creador</Text>
-            </View>
+        <View style={styles.card}>
+          <ScrollView horizontal>
+            <View>
+              {/* Encabezado */}
+              <View style={styles.header}>
+                <Text style={[styles.cell, styles.idHeader]}>ID</Text>
+                <Text style={[styles.cell, styles.name]}>Nombre</Text>
+                <Text style={[styles.cell, styles.desc]}>Descripción</Text>
+                <Text style={[styles.cell, styles.date]}>Fecha Inicio</Text>
+                <Text style={[styles.cell, styles.date]}>Fecha Fin</Text>
+                <Text style={[styles.cell, styles.user]}>Asignado</Text>
+                <Text style={[styles.cell, styles.user]}>Creador</Text>
+              </View>
 
-            {/* Datos */}
-            <FlatList
-              data={tareas}
-              keyExtractor={(item) => item.ID_tareas.toString()}
-              renderItem={renderItem}
-            />
-          </View>
-        </ScrollView>
+              {/* Filas */}
+              <FlatList
+                data={tareas}
+                keyExtractor={(item) => item.ID.toString()}
+                renderItem={renderItem}
+              />
+            </View>
+          </ScrollView>
+        </View>
       )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 10, backgroundColor: "#f9f9f9" },
-  title: { fontSize: 24, fontWeight: "bold", marginBottom: 15, textAlign: "center" },
-  header: { flexDirection: "row", borderBottomWidth: 2, borderColor: "#007BFF", paddingBottom: 5, backgroundColor: "#e0f0ff" },
-  row: { flexDirection: "row", paddingVertical: 10, borderBottomWidth: 1, borderColor: "#ccc" },
-  cell: { fontSize: 14, paddingHorizontal: 5 },
-  id: { width: 40, textAlign: "center" },
-  name: { width: 120, textAlign: "center" },
-  desc: { width: 200, textAlign: "center" },
-  date: { width: 100, textAlign: "center" },
-  user: { width: 100, textAlign: "center" },
-  error: { color: "red", textAlign: "center", marginTop: 20 },
+  container: { 
+    flex: 1, 
+    padding: 15, 
+    backgroundColor: "#eef2f5", 
+    justifyContent: "center", 
+    alignItems: "center" 
+  },
+  title: { 
+    fontSize: 26, 
+    fontWeight: "bold", 
+    marginBottom: 20, 
+    textAlign: "center", 
+    color: "#2c3e50" 
+  },
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 5,
+  },
+  header: { 
+    flexDirection: "row", 
+    borderBottomWidth: 2, 
+    borderColor: "#007BFF", 
+    paddingVertical: 10, 
+    backgroundColor: "#007BFF", 
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+  },
+  row: { 
+    flexDirection: "row", 
+    paddingVertical: 12, 
+    borderBottomWidth: 1, 
+    borderColor: "#ddd",
+    alignItems: "center"
+  },
+  cell: { 
+    fontSize: 14, 
+    paddingHorizontal: 10, 
+    textAlign: "center" 
+  },
+  // Encabezado de ID
+  idHeader: { 
+    width: 150, 
+    textAlign: "center", 
+    fontWeight: "bold", 
+    color: "#fff" 
+  },
+  // Badge para IDs
+  idBadge: {
+    width: 150,
+    backgroundColor: "#007BFF",
+    borderRadius: 20,
+    paddingVertical: 5,
+    alignItems: "center",
+    justifyContent: "center",
+    marginHorizontal: 5
+  },
+  idText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 13,
+  },
+  name: { width: 150, fontWeight: "bold" }, // Nombre en negrita
+  desc: { width: 220 },
+  date: { width: 140 },
+  user: { width: 120 },
+  error: { 
+    color: "red", 
+    textAlign: "center", 
+    marginTop: 20, 
+    fontSize: 16 
+  },
 });
