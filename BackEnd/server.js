@@ -7,7 +7,7 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// 🔹 Conexión a la base de datos
+// Conexión a la base de datos
 const db = mysql.createConnection({
   host: "localhost",
   user: "root",      // tu usuario
@@ -23,7 +23,7 @@ db.connect((err) => {
   console.log("Conectado a MySQL");
 });
 
-// 🔹 Ruta de login
+// LOGIN 
 app.post("/login", (req, res) => {
   const { Correo, Password } = req.body;
 
@@ -31,7 +31,7 @@ app.post("/login", (req, res) => {
     return res.status(400).json({ success: false, message: "Faltan datos" });
   }
 
-  const query = "SELECT * FROM usuarios WHERE Correo = ? AND Password = ?";
+  const query = "SELECT ID_usuario, Nombre, Rol FROM usuarios WHERE Correo = ? AND Password = ?";
   db.query(query, [Correo, Password], (err, result) => {
     if (err) {
       console.error("Error en la consulta:", err);
@@ -39,14 +39,42 @@ app.post("/login", (req, res) => {
     }
 
     if (result.length > 0) {
-      res.json({ success: true, message: "Inicio de sesión correcto " });
-    } else {
-      res.json({ success: false, message: "Credenciales incorrectas " });
+  const user = result[0];
+  res.json({
+    success: true,
+    message: "Inicio de sesión correcto",
+    user: {
+      id: user.ID_usuario,
+      nombre: user.Nombre,
+      rol: user.Rol
+    }
+  });
+} else {
+      res.json({ success: false, message: "Credenciales incorrectas" });
     }
   });
 });
 
-// 🔹 Iniciar servidor
+// 🔹 Ruta para obtener tareas con nombres de usuarios
+app.get("/tareas", (req, res) => {
+  const sql = `
+    SELECT t.ID_tareas, t.Nombre, t.Descripcion, t.Fecha_inicio, t.Fecha_fin,
+           ua.Nombre AS Asignado, uc.Nombre AS Creador
+    FROM tareas t
+    LEFT JOIN usuarios ua ON t.ID_UserA = ua.ID_usuario
+    LEFT JOIN usuarios uc ON t.ID_UserC = uc.ID_usuario;
+  `;
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("Error al obtener tareas:", err);
+      return res.status(500).json({ success: false, message: "Error al obtener tareas" });
+    }
+    res.json(results);
+  });
+});
+
+//Iniciar servidor
 const PORT = 3000;
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);

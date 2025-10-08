@@ -1,21 +1,22 @@
 import React, { useState } from "react";
-import { Platform } from "react-native";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-export default function LoginScreen() {
+import { Platform, View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+
+export default function LoginScreen({ onLoginSuccess }) {
   const [correo, setCorreo] = useState("");
   const [password, setPassword] = useState("");
   const [mensaje, setMensaje] = useState("");
-  const [mensajeExito, setMensajeExito] = useState(false); // true si login correcto
-
+  const [mensajeExito, setMensajeExito] = useState(false); 
   const [debug, setDebug] = useState("");
+
   const handleLogin = async () => {
     let url = "http://10.0.2.2:3000/login";
     if (Platform.OS === "web") {
       url = "http://localhost:3000/login";
     }
+
     try {
       setDebug(`Enviando a: ${url}`);
+
       const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -30,10 +31,12 @@ export default function LoginScreen() {
       if (data.success) {
         setMensaje("Usuario correcto");
         setMensajeExito(true);
+        onLoginSuccess();
       } else {
         setMensaje("Usuario no encontrado");
         setMensajeExito(false);
       }
+
     } catch (error) {
       setDebug(prev => prev + `\nError de conexión: ${error}`);
       setMensaje("Error de conexión al servidor");
