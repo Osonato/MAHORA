@@ -54,7 +54,7 @@ export default function TablesScreen() {
   const fetchTareas = async () => {
     try {
       setLoading(true);
-      const response = await fetch("https://finicky-ka-nondefiling.ngrok-free.dev/tareas");
+      const response = await fetch("http://localhost:3000/tareas");
       const json = await response.json();
 
       const dataMapped = json.map((t) => ({
@@ -105,7 +105,7 @@ export default function TablesScreen() {
   const doDelete = async (task) => {
     try {
       const id = task.ID;
-      const response = await fetch(`https://finicky-ka-nondefiling.ngrok-free.dev/tareas/${id}`, {
+      const response = await fetch(`http://localhost:3000/tareas/${id}`, {
         method: "DELETE",
       });
 
@@ -137,7 +137,7 @@ export default function TablesScreen() {
     }
 
     try {
-      const response = await fetch("https://finicky-ka-nondefiling.ngrok-free.dev/tareas", {
+      const response = await fetch("http://localhost:3000/tareas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
@@ -172,7 +172,7 @@ export default function TablesScreen() {
 
   const doUpdate = async () => {
     try {
-      const response = await fetch(`https://finicky-ka-nondefiling.ngrok-free.dev/tareas/${editTask.ID}`, {
+      const response = await fetch(`http://localhost:3000/tareas/${editTask.ID}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(editTask),
