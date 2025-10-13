@@ -39,6 +39,20 @@ export default function TablesScreen() {
     Creador: "",
   });
 
+  //Modal para editar
+  // --- MODAL DE EDITAR ---
+const [editModalVisible, setEditModalVisible] = useState(false);
+const [editTask, setEditTask] = useState({
+  ID: null,
+  Nombre: "",
+  Descripcion: "",
+  Fecha_inicio: "",
+  Fecha_fin: "",
+  Asignado: "",
+  Creador: "",
+});
+
+
   // Sugerencias para Asignado/Creador (extraídas de tareas actuales)
   const [usuariosSugeridos, setUsuariosSugeridos] = useState([]);
   const [sugerenciasAsignado, setSugerenciasAsignado] = useState([]);
@@ -229,6 +243,45 @@ export default function TablesScreen() {
     }
   };
 
+  // --- ABRIR MODAL DE EDICIÓN ---
+const openEditModal = (item) => {
+  setEditTask({
+    ID: item.ID,
+    Nombre: item.Nombre,
+    Descripcion: item.Descripcion,
+    Fecha_inicio: item.Fecha_inicio,
+    Fecha_fin: item.Fecha_fin,
+    Asignado: item.Asignado,
+    Creador: item.Creador,
+  });
+  setEditModalVisible(true);
+};
+
+
+// --- ACTUALIZAR TAREA ---
+const doUpdate = async () => {
+  try {
+    const response = await fetch(`http://localhost:3000/tareas/${editTask.ID}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(editTask),
+    });
+
+    const res = await response.json();
+    if (response.ok) {
+      Alert.alert("Actualizado", res.message);
+      setEditModalVisible(false);
+      fetchTareas();
+    } else {
+      Alert.alert("Error", res.message || "No se pudo actualizar la tarea");
+    }
+  } catch (err) {
+    Alert.alert("Error", "No se pudo conectar con el servidor.");
+  }
+};
+
+
+
   // Renderizado de cada fila (ahora interactiva para selección en delete mode)
   const renderItem = ({ item, index }) => {
     const isSelected = selectedToDelete && selectedToDelete.ID === item.ID;
@@ -259,6 +312,13 @@ export default function TablesScreen() {
           <Text style={[styles.cell, styles.date]}>{formatDate(item.Fecha_fin)}</Text>
           <Text style={[styles.cell, styles.user]}>{item.Asignado}</Text>
           <Text style={[styles.cell, styles.user]}>{item.Creador}</Text>
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: "#ffc107", paddingVertical: 6, paddingHorizontal: 8, minWidth: 80 }]}
+            onPress={() => openEditModal(item)}
+>
+  <Text style={[styles.buttonText, { color: "#000" }]}>Editar</Text>
+</TouchableOpacity>
+
         </View>
       </TouchableOpacity>
     );
@@ -348,6 +408,75 @@ export default function TablesScreen() {
           </Text>
         </View>
       )}
+      {editModalVisible && (
+  <View style={styles.modalOverlay}>
+    <View style={styles.modalContainer}>
+      <Text style={styles.modalTitle}>✏️ Editar Tarea</Text>
+
+      <ScrollView>
+        <Text style={styles.inputLabel}>Nombre *</Text>
+        <TextInput
+          style={styles.input}
+          value={editTask.Nombre}
+          onChangeText={(t) => setEditTask((s) => ({ ...s, Nombre: t }))}
+        />
+
+        <Text style={styles.inputLabel}>Descripción</Text>
+        <TextInput
+          style={[styles.input, { height: 80 }]}
+          multiline
+          value={editTask.Descripcion}
+          onChangeText={(t) => setEditTask((s) => ({ ...s, Descripcion: t }))}
+        />
+
+        <Text style={styles.inputLabel}>Fecha inicio (YYYY-MM-DD)</Text>
+        <TextInput
+          style={styles.input}
+          value={editTask.Fecha_inicio}
+          onChangeText={(t) => setEditTask((s) => ({ ...s, Fecha_inicio: t }))}
+        />
+
+        <Text style={styles.inputLabel}>Fecha fin (YYYY-MM-DD)</Text>
+        <TextInput
+          style={styles.input}
+          value={editTask.Fecha_fin}
+          onChangeText={(t) => setEditTask((s) => ({ ...s, Fecha_fin: t }))}
+        />
+
+        <Text style={styles.inputLabel}>Asignado</Text>
+        <TextInput
+          style={styles.input}
+          value={editTask.Asignado}
+          onChangeText={(t) => setEditTask((s) => ({ ...s, Asignado: t }))}
+        />
+
+        <Text style={styles.inputLabel}>Creador</Text>
+        <TextInput
+          style={styles.input}
+          value={editTask.Creador}
+          onChangeText={(t) => setEditTask((s) => ({ ...s, Creador: t }))}
+        />
+
+        <View style={styles.panelButtons}>
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: "#007BFF", marginRight: 8 }]}
+            onPress={doUpdate}
+          >
+            <Text style={styles.buttonText}>Guardar cambios</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: "#6c757d" }]}
+            onPress={() => setEditModalVisible(false)}
+          >
+            <Text style={styles.buttonText}>Cancelar</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </View>
+  </View>
+)}
+
 
       {loading ? (
         <ActivityIndicator size="large" color="#007BFF" />
@@ -406,6 +535,8 @@ export default function TablesScreen() {
                 onChangeText={(t) => setForm((s) => ({ ...s, Nombre: t }))}
                 placeholder="Nombre de la tarea"
               />
+
+              
 
               <Text style={styles.inputLabel}>Descripción</Text>
               <TextInput
@@ -699,4 +830,30 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.25)",
     zIndex: 30,
   },
+  modalOverlay: {
+  position: "absolute",
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  backgroundColor: "rgba(0,0,0,0.4)",
+  justifyContent: "center",
+  alignItems: "center",
+  zIndex: 100,
+},
+modalContainer: {
+  width: "90%",
+  maxHeight: "80%",
+  backgroundColor: "#fff",
+  borderRadius: 10,
+  padding: 16,
+  elevation: 5,
+},
+modalTitle: {
+  fontSize: 20,
+  fontWeight: "bold",
+  marginBottom: 10,
+  textAlign: "center",
+},
+
 });
