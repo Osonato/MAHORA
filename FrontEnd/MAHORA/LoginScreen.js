@@ -9,9 +9,9 @@ export default function LoginScreen({ onLoginSuccess }) {
   const [debug, setDebug] = useState("");
 
   const handleLogin = async () => {
-    let url = "http://10.0.2.2:3000/login";
+    let url = "https://finicky-ka-nondefiling.ngrok-free.dev/login";
     if (Platform.OS === "web") {
-      url = "http://localhost:3000/login";
+      url = "https://finicky-ka-nondefiling.ngrok-free.dev/login";
     }
 
     try {

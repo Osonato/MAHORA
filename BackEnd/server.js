@@ -74,7 +74,7 @@ app.get("/tareas", (req, res) => {
   });
 });
 
-// 🔹 Crear una nueva tarea (CREATE)
+//  Crear una nueva tarea (CREATE)
 app.post("/tareas", (req, res) => {
   const { Nombre, Descripcion, Fecha_inicio, Fecha_fin, Asignado, Creador } = req.body;
 
@@ -82,19 +82,24 @@ app.post("/tareas", (req, res) => {
     return res.status(400).json({ success: false, message: "El campo 'Nombre' es obligatorio" });
   }
 
-  // Buscar IDs de usuarios (Asignado y Creador)
-  const findUserId = (nombre, callback) => {
-    if (!nombre) return callback(null, null);
-    db.query("SELECT ID_usuario FROM usuarios WHERE Nombre = ?", [nombre], (err, result) => {
+  // Función auxiliar para convertir nombre o ID a un ID válido
+  const resolveUserId = (valor, callback) => {
+    if (!valor) return callback(null, null);
+
+    // Si es número, lo tomamos directamente como ID
+    if (!isNaN(valor)) return callback(null, Number(valor));
+
+    // Si es texto, buscamos en la BD por nombre
+    db.query("SELECT ID_usuario FROM usuarios WHERE Nombre = ?", [valor], (err, result) => {
       if (err) return callback(err);
       callback(null, result.length > 0 ? result[0].ID_usuario : null);
     });
   };
 
-  findUserId(Asignado, (errA, idA) => {
+  resolveUserId(Asignado, (errA, idA) => {
     if (errA) return res.status(500).json({ success: false, message: "Error buscando Asignado" });
 
-    findUserId(Creador, (errC, idC) => {
+    resolveUserId(Creador, (errC, idC) => {
       if (errC) return res.status(500).json({ success: false, message: "Error buscando Creador" });
 
       const sql = `
@@ -111,6 +116,7 @@ app.post("/tareas", (req, res) => {
     });
   });
 });
+
 
 
 // Actualizar una tarea (UPDATE)
@@ -168,3 +174,4 @@ const PORT = 3000;
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
+
